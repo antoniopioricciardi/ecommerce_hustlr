@@ -3,6 +3,7 @@ const asyncErrorHandler = require('../middlewares/helpers/asyncErrorHandler');
 const SearchFeatures = require('../utils/searchFeatures');
 const ErrorHandler = require('../utils/errorHandler');
 const cloudinary = require('cloudinary');
+const { embedText, embedTexts } = require('../utils/embed');
 
 // Get All Products
 exports.getAllProducts = asyncErrorHandler(async (req, res, next) => {
@@ -40,6 +41,55 @@ exports.getProducts = asyncErrorHandler(async (req, res, next) => {
         products,
     });
 });
+
+// Natural language search
+exports.searchProductsNLP = asyncErrorHandler(async (req, res, next) => {
+    const q = req.query.q || '';
+    if (!q) {
+        return res.status(200).json({ success: true, products: [] });
+    }
+
+    const priceMatch = q.match(/under \$?(\d+)/i);
+    const maxPrice = priceMatch ? Number(priceMatch[1]) : undefined;
+    const ratingMatch = q.match(/(good|great|excellent) reviews?/i);
+    const minRating = ratingMatch ? 4 : undefined;
+
+    const filter = {};
+    if (maxPrice !== undefined) filter.price = { $lt: maxPrice };
+    if (minRating !== undefined) filter.ratings = { $gte: minRating };
+
+    const products = await Product.find(filter);
+    if (!products.length) {
+        return res.status(200).json({ success: true, products: [] });
+    }
+
+    const queryEmbedding = await embedText(q);
+    const texts = products.map(p => `${p.name} ${p.description}`);
+    const productEmbeddings = await embedTexts(texts);
+
+    const cosineSimilarity = (a, b) => {
+        let dot = 0, normA = 0, normB = 0;
+        for (let i = 0; i < a.length; i++) {
+            dot += a[i] * b[i];
+            normA += a[i] * a[i];
+            normB += b[i] * b[i];
+        }
+        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+    };
+
+    const scored = products.map((p, idx) => ({
+        product: p,
+        score: cosineSimilarity(queryEmbedding, productEmbeddings[idx])
+    }));
+
+    scored.sort((a, b) => b.score - a.score);
+
+    res.status(200).json({
+        success: true,
+        products: scored.map(s => s.product),
+    });
+});
+
 
 // Get Product Details
 exports.getProductDetails = asyncErrorHandler(async (req, res, next) => {

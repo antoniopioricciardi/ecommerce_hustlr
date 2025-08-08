@@ -1,0 +1,43 @@
+[
+  {
+    "id": 1,
+    "name": "Red Tee",
+    "price": 19.99,
+    "category": "clothing",
+    "description": "Soft cotton t‑shirt",
+    "rating": 4.5
+  },
+  {
+    "id": 2,
+    "name": "Blue Jeans",
+    "price": 39.99,
+    "category": "clothing",
+    "description": "Comfortable denim jeans",
+    "rating": 4.0
+  },
+  {
+    "id": 3,
+    "name": "Black Sneakers",
+    "price": 59.99,
+    "category": "footwear",
+    "description": "Stylish black sneakers",
+    "rating": 4.8
+  },
+  {
+    "id": 4,
+    "name": "Leather Jacket",
+    "price": 89.99,
+    "category": "clothing",
+    "description": "Genuine leather jacket",
+    "rating": 4.7
+  },
+  {
+    "id": 5,
+    "name": "Smart Watch",
+    "price": 199.99,
+    "category": "accessories",
+    "description": "Feature-rich smart watch",
+    "rating": 4.6
+  }
+
+]
